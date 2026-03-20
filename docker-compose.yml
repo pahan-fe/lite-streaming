@@ -1,0 +1,114 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lite_streaming}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: dev
+    command: go run ./cmd/api
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-lite_streaming}?sslmode=disable
+      - S3_ENDPOINT=minio:9000
+      - S3_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
+      - S3_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
+      - S3_BUCKET=${S3_BUCKET:-videos}
+      - S3_USE_SSL=false
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672/
+      - MAX_UPLOAD_SIZE=1073741824
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: dev
+    command: go run ./cmd/worker
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-lite_streaming}?sslmode=disable
+      - S3_ENDPOINT=minio:9000
+      - S3_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
+      - S3_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
+      - S3_BUCKET=${S3_BUCKET:-videos}
+      - S3_USE_SSL=false
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672/
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev
+    command: npm run dev -- --host 0.0.0.0
+    ports:  
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  minio_data:
+
+    
