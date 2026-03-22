@@ -12,5 +12,4 @@ RUN CGO_ENABLED=0 go build -o /bin/worker ./cmd/worker
 FROM alpine:3.19 as prod
 RUN apk add --no-cache ffmpeg ca-certificates
 COPY --from=build /bin/api /bin/worker /bin/
-COPY --from=build /bin/worker /bin/worker
 CMD ["/bin/api"]
