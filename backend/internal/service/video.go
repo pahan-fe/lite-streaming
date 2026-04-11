@@ -90,6 +90,6 @@ func (s *VideoService) List(page int, limit int) ([]*model.Video, error) {
 	return videos, nil
 }
 
-func NewService(repo *repository.VideoRepository, queue *queue.RabbitMQ, storage *storage.S3Storage) *VideoService {
+func NewVideoService(repo *repository.VideoRepository, queue *queue.RabbitMQ, storage *storage.S3Storage) *VideoService {
 	return &VideoService{repo: repo, queue: queue, storage: storage}
 }
