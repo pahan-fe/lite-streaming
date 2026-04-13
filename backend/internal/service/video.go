@@ -1,39 +1,40 @@
 package service
 
 import (
+	"encoding/json"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/pahan-fe/lite-streaming/backend/internal/model"
+	"github.com/pahan-fe/lite-streaming/backend/internal/queue"
 	"github.com/pahan-fe/lite-streaming/backend/internal/repository"
 	"github.com/pahan-fe/lite-streaming/backend/internal/storage"
-	"github.com/pahan-fe/lite-streaming/backend/internal/queue"
-	"github.com/pahan-fe/lite-streaming/backend/internal/model"
-	"github.com/google/uuid"  
-	"time"
-	"encoding/json"
 )
 
 type VideoService struct {
-	repo *repository.VideoRepository
-	queue *queue.RabbitMQ
+	repo    *repository.VideoRepository
+	queue   *queue.RabbitMQ
 	storage *storage.S3Storage
 }
 
 func (s *VideoService) Upload(videoData []byte, contentType string, filename string) (string, error) {
 	id := uuid.New().String()
 
-	storageErr := s.storage.Upload("videos/" + id + "/original/" + filename, videoData, contentType)
+	storageErr := s.storage.Upload("videos/"+id+"/original/"+filename, videoData, contentType)
 	if storageErr != nil {
 		return id, storageErr
 	}
-	
+
 	video := &model.Video{
-		ID: id,
+		ID:               id,
 		OriginalFilename: filename,
-		ContentType: contentType,
-		Size: int64(len(videoData)),
-		Status: "uploaded",
-		S3RawKey: "videos/" + id + "/original/" + filename,
-		S3HLSKey: "",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		ContentType:      contentType,
+		Size:             int64(len(videoData)),
+		Status:           "uploaded",
+		S3RawKey:         "videos/" + id + "/original/" + filename,
+		S3HLSKey:         "",
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
 	}
 	repoErr := s.repo.Create(video)
 	if repoErr != nil {
@@ -81,7 +82,7 @@ func (s *VideoService) Delete(id string) error {
 	return nil
 }
 
-func (s *VideoService) List(page int, limit int) ([]*model.Video, error) {
+func (s *VideoService) List(page int, limit int) ([]model.Video, error) {
 	videos, err := s.repo.GetAll(page, limit)
 	if err != nil {
 		return nil, err
