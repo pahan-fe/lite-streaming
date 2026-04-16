@@ -1,2 +1,16 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<script lang="ts">
+    const { data } = $props();
+</script>
+
+<section class="container">
+    <h1>Video List</h1>
+    <ul class="video-list">
+        {#each data.videos as video}
+            <li class="video-item">
+                <a href={`/watch/${video.id}`}> 
+                    <h2>{video.title}</h2>
+                </a>
+            </li>
+        {/each}
+    </ul>
+</section>
