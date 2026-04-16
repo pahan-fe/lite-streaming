@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine AS dev
+FROM golang:1.25-alpine AS dev 
 WORKDIR /app
 RUN apk add --no-cache ffmpeg
 COPY go.mod go.sum ./

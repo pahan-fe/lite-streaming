@@ -19,19 +19,19 @@ func (r *VideoRepository) Create(video *model.Video) error {
 func (r *VideoRepository) GetByID(id string) (*model.Video, error) {
 	var video model.Video
 	err := r.db.Get(&video, "SELECT * FROM videos WHERE id = $1", id)
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &video, nil
 }
 
 func (r *VideoRepository) GetAll(page int, limit int) ([]model.Video, error) {
-	var videos []model.Video
+	videos := []model.Video{}
 
 	offset := (page - 1) * limit
-	
+
 	err := r.db.Select(&videos, "SELECT * FROM videos ORDER BY created_at DESC LIMIT $1 OFFSET $2", limit, offset)
 	if err != nil {
 		return nil, err
