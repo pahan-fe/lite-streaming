@@ -20,3 +20,10 @@ export const fetchVideoList = async (fetchFn: typeof fetch): Promise<Video[]> =>
 
   return result.map(mapVideoDtoToVideo)
 }
+
+export const fetchVideoById = async (id: string, fetchFn: typeof fetch): Promise<Video> => {
+  const response = await apiFetch(`/api/videos/${id}`, fetchFn);
+  const result = await response.json();
+
+  return mapVideoDtoToVideo(result);
+}

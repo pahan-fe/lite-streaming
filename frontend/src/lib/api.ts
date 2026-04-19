@@ -3,10 +3,12 @@ import { browser } from '$app/environment';
 export async function apiFetch(path: string, fetchFn: typeof fetch = fetch, init?: RequestInit): Promise<Response> {
     let url = path;
 
-    if (!browser) {
-        const { env } = await import('$env/dynamic/private');
-        url = `${env.INTERNAL_API_URL ?? 'http://localhost:8080'}${path}`;
+    if (browser) {
+       return fetchFn(path, init);
     }
 
-    return fetchFn(url, init);                                                     
+    const { env } = await import('$env/dynamic/private');
+    url = `${env.INTERNAL_API_URL ?? 'http://localhost:8080'}${path}`;
+
+    return globalThis.fetch(url, init);
 }

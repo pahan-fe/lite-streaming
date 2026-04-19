@@ -1,5 +1,6 @@
 <script lang="ts">
-    const { data } = $props();
+    import type { PageProps } from './$types'; 
+    const { data }: PageProps = $props();
 </script>
 
 <section class="container">
