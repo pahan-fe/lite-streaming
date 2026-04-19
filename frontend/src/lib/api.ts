@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
 
-export async function apiFetch(path: string, fetchFn: typeof fetch = fetch): Promise<Response> {
+export async function apiFetch(path: string, fetchFn: typeof fetch = fetch, init?: RequestInit): Promise<Response> {
     let url = path;
 
     if (!browser) {
@@ -8,5 +8,5 @@ export async function apiFetch(path: string, fetchFn: typeof fetch = fetch): Pro
         url = `${env.INTERNAL_API_URL ?? 'http://localhost:8080'}${path}`;
     }
 
-    return fetchFn(url);                                                     
+    return fetchFn(url, init);                                                     
 }
