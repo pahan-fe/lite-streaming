@@ -50,12 +50,25 @@ func (s *S3Storage) Delete(key string) error {
 }
 
 func NewS3Storage(c *config.Config) (*S3Storage, error) {
-	s, err := minio.New(c.S3Endpoint, &minio.Options{
+	s, sErr := minio.New(c.S3Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(c.S3AccessKey, c.S3SecretKey, ""),
 		Secure: c.S3UseSSL,
 	})
-	if err != nil {
-		return nil, err
+	if sErr != nil {
+		return nil, sErr
+	}
+
+	ctx := context.Background()
+
+	exist, existErr := s.BucketExists(ctx, c.S3Bucket)
+	if existErr != nil {
+		return nil, existErr
+	}
+	if !exist {
+		createErr := s.MakeBucket(ctx, c.S3Bucket, minio.MakeBucketOptions{})
+		if createErr != nil {
+			return nil, createErr
+		}
 	}
 
 	return &S3Storage{client: s, bucket: c.S3Bucket}, nil
