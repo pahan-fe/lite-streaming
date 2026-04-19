@@ -1,11 +1,12 @@
 package handler
 
 import (
-	"github.com/pahan-fe/lite-streaming/backend/internal/service"
-	"strconv"
 	"encoding/json"
-	"net/http"
 	"io"
+	"net/http"
+	"strconv"
+
+	"github.com/pahan-fe/lite-streaming/backend/internal/service"
 )
 
 type VideoHandler struct {
@@ -47,15 +48,15 @@ func (h *VideoHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	limitStr := r.URL.Query().Get("limit")
 
 	page, pageErr := strconv.Atoi(pageStr)
-	if pageErr != nil || page < 1 {                                                                        
-      page = 1                                                                                        
+	if pageErr != nil || page < 1 {
+		page = 1
 	}
 
 	limit, limitErr := strconv.Atoi(limitStr)
 	if limitErr != nil || limit < 1 {
-	  limit = 20                                                                                       
+		limit = 20
 	}
-	
+
 	videos, videosErr := h.service.List(page, limit)
 	if videosErr != nil {
 		http.Error(w, "Error fetching videos", http.StatusInternalServerError)
@@ -89,6 +90,33 @@ func (h *VideoHandler) HandleDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *VideoHandler) HandleStream(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+
+	data, contentType, err := h.service.GetRawStream(id)
+	if err != nil {
+		http.Error(w, "Error fetching video stream", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", contentType)
+	w.Write(data)
+}
+
+func (h *VideoHandler) HandleHLSFile(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	filename := r.PathValue("filename")
+
+	data, contentType, err := h.service.GetHLSFile(id, filename)
+	if err != nil {
+		http.Error(w, "Error fetching HLS file", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", contentType)
+	w.Write(data)
 }
 
 func NewVideoHandler(service *service.VideoService) *VideoHandler {

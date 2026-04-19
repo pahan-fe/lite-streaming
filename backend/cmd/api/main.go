@@ -2,23 +2,24 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"log"
+	"net/http"
+
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/pahan-fe/lite-streaming/backend/internal/config"
-	"github.com/pahan-fe/lite-streaming/backend/internal/service"
 	"github.com/pahan-fe/lite-streaming/backend/internal/handler"
-	"github.com/pahan-fe/lite-streaming/backend/internal/repository"
-	"github.com/pahan-fe/lite-streaming/backend/internal/storage"
 	"github.com/pahan-fe/lite-streaming/backend/internal/queue"
+	"github.com/pahan-fe/lite-streaming/backend/internal/repository"
+	"github.com/pahan-fe/lite-streaming/backend/internal/service"
+	"github.com/pahan-fe/lite-streaming/backend/internal/storage"
 )
 
 func main() {
 	fmt.Println("Starting API server on port 8080...")
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("ok"))  
+		w.Write([]byte("ok"))
 	})
 
 	cfg := config.Load()
@@ -46,6 +47,8 @@ func main() {
 	http.HandleFunc("GET /api/videos", videoHandler.HandleList)
 	http.HandleFunc("GET /api/videos/{id}", videoHandler.HandleGetByID)
 	http.HandleFunc("DELETE /api/videos/{id}", videoHandler.HandleDelete)
+	http.HandleFunc("GET /api/videos/{id}/stream", videoHandler.HandleStream)
+	http.HandleFunc("GET /api/videos/{id}/hls/{filename}", videoHandler.HandleHLSFile)
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

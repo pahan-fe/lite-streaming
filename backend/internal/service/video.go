@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -89,6 +90,43 @@ func (s *VideoService) List(page int, limit int) ([]model.Video, error) {
 	}
 
 	return videos, nil
+}
+
+func (s *VideoService) GetRawStream(id string) ([]byte, string, error) {
+	video, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, "", err
+	}
+
+	data, storageErr := s.storage.Get(video.S3RawKey)
+	if storageErr != nil {
+		return nil, "", storageErr
+	}
+
+	return data, video.ContentType, nil
+}
+
+func (s *VideoService) GetHLSFile(id string, filename string) ([]byte, string, error) {
+	_, videoErr := s.repo.GetByID(id)
+	if videoErr != nil {
+		return nil, "", videoErr
+	}
+
+	key := "videos/" + id + "/hls/" + filename
+	data, storageErr := s.storage.Get(key)
+
+	if storageErr != nil {
+		return nil, "", storageErr
+	}
+
+	var contentType string
+	if strings.HasSuffix(filename, ".m3u8") {
+		contentType = "application/vnd.apple.mpegurl"
+	} else {
+		contentType = "video/mp2t"
+	}
+
+	return data, contentType, nil
 }
 
 func NewVideoService(repo *repository.VideoRepository, queue *queue.RabbitMQ, storage *storage.S3Storage) *VideoService {
