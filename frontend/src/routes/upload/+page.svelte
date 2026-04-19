@@ -1,6 +1,6 @@
 <script lang="ts">
     import { goto } from '$app/navigation'
-    import { uploadVideo } from '$lib/videoUpload';
+    import { uploadVideo } from '$lib/features/video/api';
 
     let loading = $state('idle');
     let filesList = $state <FileList | null>(null);
