@@ -21,6 +21,7 @@
             goto(`/watch/${id}`);
         } catch (err) {
             // notification about loading error
+            console.error('Upload error:', err);
         } finally {
             loading = 'idle';
         }
