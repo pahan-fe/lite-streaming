@@ -34,7 +34,7 @@
 	});
 
 	$effect(() => {
-		if (videoStatus === 'ready') {
+		if (videoStatus === 'ready' || videoStatus === 'failed') {
 			return;
 		}
 
@@ -75,30 +75,60 @@
 			<span class="text-ink-dim">·</span>
 			<span class="tabular-nums">{formatSize(data.video.size)}</span>
 			<span class="text-ink-dim">·</span>
-			{#if data.video.status === 'ready'}
+			{#if videoStatus === 'ready'}
 				<span class="text-amber">[HLS · Ready]</span>
+			{:else if videoStatus === 'failed'}
+				<span class="text-crimson">[Processing Failed]</span>
 			{:else}
-				<span class="text-ink cursor-blink">[{data.video.status}]</span>
+				<span class="text-ink cursor-blink">[{videoStatus}]</span>
 			{/if}
 		</div>
 	</header>
 
 	<div class="reveal" style="animation-delay: 0.2s">
-		<div class="relative border border-hairline bg-black shadow-[0_40px_80px_-20px_oklch(0_0_0/0.5)]">
-			<video bind:this={videoEl} controls class="w-full aspect-video block"></video>
-			<span class="absolute top-3 left-4 font-mono text-[9px] uppercase tracking-[0.4em] text-amber/70 pointer-events-none">
-				Reel · {data.video.id.slice(0, 6)}
-			</span>
-			<span class="absolute top-3 right-4 font-mono text-[9px] uppercase tracking-[0.4em] text-amber/70 pointer-events-none">
-				Now Playing
-			</span>
-			<span class="absolute bottom-3 left-4 font-mono text-[9px] uppercase tracking-[0.4em] text-amber/70 pointer-events-none">
-				{data.video.status === 'ready' ? 'HLS · Adaptive' : 'Raw · Pass-through'}
-			</span>
-			<span class="absolute bottom-3 right-4 font-mono text-[9px] uppercase tracking-[0.4em] text-amber/70 pointer-events-none tabular-nums">
-				24 fps
-			</span>
-		</div>
+		{#if videoStatus === 'failed'}
+			<div class="relative border border-crimson/40 bg-black/60 aspect-video flex items-center justify-center overflow-hidden">
+				<span class="absolute top-3 left-4 font-mono text-[9px] uppercase tracking-[0.4em] text-crimson/70">
+					Reel · {data.video.id.slice(0, 6)}
+				</span>
+				<span class="absolute top-3 right-4 font-mono text-[9px] uppercase tracking-[0.4em] text-crimson/70">
+					Error · 500
+				</span>
+				<div class="text-center space-y-4 px-6">
+					<p class="font-mono text-[11px] uppercase tracking-[0.4em] text-crimson">
+						Processing Failed
+					</p>
+					<p class="font-display text-2xl md:text-3xl text-ink leading-tight">
+						This reel could not be transcoded.
+					</p>
+					<p class="font-mono text-[10px] uppercase tracking-[0.3em] text-ink-dim">
+						Remove from archive · try another upload
+					</p>
+				</div>
+				<span class="absolute bottom-3 left-4 font-mono text-[9px] uppercase tracking-[0.4em] text-crimson/70">
+					No Signal
+				</span>
+				<span class="absolute bottom-3 right-4 font-mono text-[9px] uppercase tracking-[0.4em] text-crimson/70 tabular-nums">
+					—
+				</span>
+			</div>
+		{:else}
+			<div class="relative border border-hairline bg-black shadow-[0_40px_80px_-20px_oklch(0_0_0/0.5)]">
+				<video bind:this={videoEl} controls class="w-full aspect-video block"></video>
+				<span class="absolute top-3 left-4 font-mono text-[9px] uppercase tracking-[0.4em] text-amber/70 pointer-events-none">
+					Reel · {data.video.id.slice(0, 6)}
+				</span>
+				<span class="absolute top-3 right-4 font-mono text-[9px] uppercase tracking-[0.4em] text-amber/70 pointer-events-none">
+					Now Playing
+				</span>
+				<span class="absolute bottom-3 left-4 font-mono text-[9px] uppercase tracking-[0.4em] text-amber/70 pointer-events-none">
+					{videoStatus === 'ready' ? 'HLS · Adaptive' : 'Raw · Pass-through'}
+				</span>
+				<span class="absolute bottom-3 right-4 font-mono text-[9px] uppercase tracking-[0.4em] text-amber/70 pointer-events-none tabular-nums">
+					24 fps
+				</span>
+			</div>
+		{/if}
 	</div>
 
 	<footer class="flex flex-wrap items-center justify-between gap-6 border-t border-hairline pt-8 reveal" style="animation-delay: 0.35s">

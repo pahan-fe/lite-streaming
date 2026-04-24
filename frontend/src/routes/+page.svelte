@@ -52,6 +52,8 @@
 									<span class="text-ink-dim">·</span>
 									{#if video.status === 'ready'}
 										<span class="text-amber">[Ready]</span>
+									{:else if video.status === 'failed'}
+										<span class="text-crimson">[Processing Failed]</span>
 									{:else}
 										<span class="text-ink cursor-blink">[{video.status}]</span>
 									{/if}
