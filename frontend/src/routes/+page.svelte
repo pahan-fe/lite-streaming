@@ -1,17 +1,70 @@
 <script lang="ts">
-    import type { PageProps } from './$types'; 
-    const { data }: PageProps = $props();
+	import type { PageProps } from './$types';
+	import { formatSize } from '$lib/utils/format';
+
+	const { data }: PageProps = $props();
 </script>
 
-<section class="container">
-    <h1>Video List</h1>
-    <ul>
-        {#each data.videos as video}
-            <li class="video-item">
-                <a href={`/watch/${video.id}`}> 
-                    <h2>{video.title}</h2>
-                </a>
-            </li>
-        {/each}
-    </ul>
+<section class="space-y-20">
+	<header class="space-y-7 reveal">
+		<p class="font-mono text-[11px] uppercase tracking-[0.4em] text-amber">Private Archive · Est. MMXXVI</p>
+		<h1 class="font-display text-6xl md:text-8xl tracking-[-0.02em] text-ink leading-[0.95]">
+			The <em class="italic font-light text-amber">Catalogue</em>
+		</h1>
+		<div class="flex flex-wrap items-center gap-4 font-mono text-[11px] uppercase tracking-[0.25em] text-ink-muted pt-2">
+			<span class="tabular-nums">{String(data.videos.length).padStart(3, '0')} reel{data.videos.length === 1 ? '' : 's'} on file</span>
+			<span class="h-px w-20 bg-hairline draw-line" style="animation-delay: 0.4s"></span>
+			<span class="text-ink-dim">Sorted by most recent</span>
+		</div>
+	</header>
+
+	{#if data.videos.length === 0}
+		<div class="py-24 text-center space-y-5 reveal" style="animation-delay: 0.2s">
+			<p class="font-mono text-[11px] uppercase tracking-[0.35em] text-ink-dim">The archive is empty</p>
+			<p class="font-display text-3xl italic text-ink-muted">Nothing has been filed yet.</p>
+			<a
+				href="/upload"
+				class="inline-block mt-6 font-mono text-[11px] uppercase tracking-[0.3em] text-amber border-b border-amber-dim hover:border-amber pb-1 transition-colors"
+			>
+				Begin the collection →
+			</a>
+		</div>
+	{:else}
+		<ul class="relative">
+			{#each data.videos as video, i (video.id)}
+				<li class="group reveal" style="animation-delay: {0.15 + i * 0.05}s">
+					<a
+						href={`/watch/${video.id}`}
+						class="relative block border-t border-hairline py-8 md:py-10 transition-[border-color,padding-left] duration-500 group-hover:border-amber-dim group-hover:pl-4"
+					>
+						<div class="flex items-start gap-6 md:gap-10">
+							<span class="font-mono text-[11px] text-ink-dim tabular-nums pt-3 w-8 shrink-0 transition-colors duration-300 group-hover:text-amber">
+								{String(i + 1).padStart(2, '0')}
+							</span>
+							<div class="flex-1 min-w-0 space-y-3">
+								<h2 class="font-display text-2xl md:text-4xl leading-tight tracking-tight text-ink transition-colors duration-300 group-hover:text-amber truncate">
+									{video.title}
+								</h2>
+								<div class="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[10px] md:text-[11px] uppercase tracking-[0.25em] text-ink-muted">
+									<span>{video.updatedAt}</span>
+									<span class="text-ink-dim">·</span>
+									<span class="tabular-nums">{formatSize(video.size)}</span>
+									<span class="text-ink-dim">·</span>
+									{#if video.status === 'ready'}
+										<span class="text-amber">[Ready]</span>
+									{:else}
+										<span class="text-ink cursor-blink">[{video.status}]</span>
+									{/if}
+								</div>
+							</div>
+							<span class="font-mono text-xl md:text-2xl text-ink-dim pt-2 shrink-0 transition-all duration-500 group-hover:text-amber group-hover:translate-x-2">
+								→
+							</span>
+						</div>
+					</a>
+				</li>
+			{/each}
+			<li class="border-t border-hairline"></li>
+		</ul>
+	{/if}
 </section>
