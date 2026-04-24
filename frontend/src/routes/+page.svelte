@@ -5,7 +5,7 @@
 
 <section class="container">
     <h1>Video List</h1>
-    <ul class="video-list">
+    <ul>
         {#each data.videos as video}
             <li class="video-item">
                 <a href={`/watch/${video.id}`}> 
