@@ -14,29 +14,32 @@
 	let dialogOpen = $state(false);
 	let deleting = $state(false);
 
+	const videoId = $derived(data.video.id);
+	const videoStatus = $derived(data.video.status);
+
 	$effect(() => {
 		if (!videoEl) {
 			return;
 		}
 
-		if (data.video.status === 'ready') {
+		if (videoStatus === 'ready') {
 			const hls = new Hls();
-			hls.loadSource(`/api/videos/${data.video.id}/hls/index.m3u8`);
+			hls.loadSource(`/api/videos/${videoId}/hls/index.m3u8`);
 			hls.attachMedia(videoEl);
 
 			return () => hls.destroy();
 		} else {
-			videoEl.src = `/api/videos/${data.video.id}/stream`;
+			videoEl.src = `/api/videos/${videoId}/stream`;
 		}
 	});
 
 	$effect(() => {
-		if (data.video.status === 'ready') {
+		if (videoStatus === 'ready') {
 			return;
 		}
 
 		const interval = setInterval(() => {
-			invalidate(`video:${data.video.id}`);
+			invalidate(`video:${videoId}`);
 		}, 5000);
 
 		return () => clearInterval(interval);
