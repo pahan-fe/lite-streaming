@@ -3,10 +3,16 @@
 	import type { PageProps } from './$types';
 	import { deleteVideoById } from '$lib/features/video/api';
 	import { goto, invalidate } from '$app/navigation';
+	import { toast } from 'svelte-sonner';
 	import { formatSize } from '$lib/utils/format';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Button } from '$lib/components/ui/button';
+
+	const { data }: PageProps = $props();
 
 	let videoEl: HTMLVideoElement | undefined = $state();
-	const { data }: PageProps = $props();
+	let dialogOpen = $state(false);
+	let deleting = $state(false);
 
 	$effect(() => {
 		if (!videoEl) {
@@ -36,16 +42,17 @@
 		return () => clearInterval(interval);
 	});
 
-	async function removeVideo() {
-		if (!confirm('Remove this reel from the archive?')) {
-			return;
-		}
-
+	async function confirmRemove() {
+		deleting = true;
 		try {
 			await deleteVideoById(data.video.id, fetch);
+			toast.success('Reel removed from archive');
+			dialogOpen = false;
 			goto('/');
 		} catch (error) {
-			console.error('Error deleting video:', error);
+			const message = error instanceof Error ? error.message : 'Unknown error';
+			toast.error(`Failed to remove · ${message}`);
+			deleting = false;
 		}
 	}
 </script>
@@ -100,7 +107,7 @@
 			<span class="ml-2">Back to Catalogue</span>
 		</a>
 		<button
-			onclick={removeVideo}
+			onclick={() => dialogOpen = true}
 			class="group font-mono text-[11px] uppercase tracking-[0.3em] text-ink-dim hover:text-crimson transition-colors"
 		>
 			<span class="border-b border-transparent group-hover:border-crimson pb-1 transition-colors">
@@ -109,3 +116,37 @@
 		</button>
 	</footer>
 </section>
+
+<Dialog.Root bind:open={dialogOpen}>
+	<Dialog.Content class="bg-card border-hairline max-w-md">
+		<Dialog.Header class="space-y-4">
+			<p class="font-mono text-[11px] uppercase tracking-[0.4em] text-crimson">
+				Confirm · Removal
+			</p>
+			<Dialog.Title class="font-display text-3xl md:text-4xl tracking-tight text-ink leading-tight">
+				Remove this reel?
+			</Dialog.Title>
+			<Dialog.Description class="font-display text-base text-ink-muted leading-relaxed">
+				"{data.video.title}" will be erased from the archive. The action cannot be undone.
+			</Dialog.Description>
+		</Dialog.Header>
+		<Dialog.Footer class="flex flex-row items-center justify-end gap-4 border-t border-hairline pt-6 mt-4">
+			<Button
+				variant="ghost"
+				onclick={() => dialogOpen = false}
+				disabled={deleting}
+				class="font-mono text-[11px] uppercase tracking-[0.3em]"
+			>
+				Keep
+			</Button>
+			<Button
+				variant="destructive"
+				onclick={confirmRemove}
+				disabled={deleting}
+				class="font-mono text-[11px] uppercase tracking-[0.3em]"
+			>
+				{deleting ? 'Removing…' : 'Remove →'}
+			</Button>
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>

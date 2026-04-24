@@ -2,9 +2,22 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { page } from '$app/state';
+	import { ModeWatcher } from 'mode-watcher';
+	import { Toaster } from '$lib/components/ui/sonner';
 
 	let { children } = $props();
 </script>
+
+<ModeWatcher defaultMode="dark" />
+<Toaster
+	position="bottom-right"
+	toastOptions={{
+		classes: {
+			toast: 'font-mono uppercase tracking-[0.15em] text-[11px]',
+			title: 'font-display normal-case tracking-normal text-sm'
+		}
+	}}
+/>
 
 <svelte:head>
 	<link rel="icon" href={favicon} />

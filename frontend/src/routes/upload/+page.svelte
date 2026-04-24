@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { toast } from 'svelte-sonner';
 	import { uploadVideo } from '$lib/features/video/api';
 	import { formatSize } from '$lib/utils/format';
 
@@ -17,10 +18,11 @@
 		loading = 'loading';
 		try {
 			const { id } = await uploadVideo(selectedFile);
+			toast.success('Reel filed to archive');
 			goto(`/watch/${id}`);
 		} catch (err) {
-			console.error('Upload error:', err);
-		} finally {
+			const message = err instanceof Error ? err.message : 'Unknown error';
+			toast.error(`Upload failed · ${message}`);
 			loading = 'idle';
 		}
 	};
