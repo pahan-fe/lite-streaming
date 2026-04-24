@@ -29,8 +29,5 @@ export const fetchVideoById = async (id: string, fetchFn: typeof fetch): Promise
 }
 
 export const deleteVideoById = async (id: string, fetchFn: typeof fetch): Promise<void> => {
-  const response = await apiFetch(`/api/videos/${id}`, fetchFn, { method: 'DELETE' });
-  if (!response.ok) {
-    throw new Error(`Delete failed: ${response.status}`);
-  }
+  await apiFetch(`/api/videos/${id}`, fetchFn, { method: 'DELETE' });
 }

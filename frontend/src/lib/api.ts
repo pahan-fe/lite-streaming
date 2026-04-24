@@ -1,14 +1,21 @@
 import { browser } from '$app/environment';
 
 export async function apiFetch(path: string, fetchFn: typeof fetch = fetch, init?: RequestInit): Promise<Response> {
-    let url = path;
+    let response: Response;
 
     if (browser) {
-       return fetchFn(path, init);
+       response = await fetchFn(path, init);
+    } else {
+        const { env } = await import('$env/dynamic/private');
+        const url = `${env.INTERNAL_API_URL ?? 'http://localhost:8080'}${path}`;
+    
+        response = await globalThis.fetch(url, init);
     }
 
-    const { env } = await import('$env/dynamic/private');
-    url = `${env.INTERNAL_API_URL ?? 'http://localhost:8080'}${path}`;
+    if (!response.ok) {
+        const message = await response.text();
+        throw new Error( `API request failed: ${message.trim() || response.statusText} (status ${response.status})`);
+    }
 
-    return globalThis.fetch(url, init);
+    return response;
 }
