@@ -119,6 +119,9 @@ func main() {
 		err := processMessage(msg.Body, repo, str, tc)
 		if err != nil {
 			log.Printf("Failed to process message: %v", err)
+			msg.Nack(false, false)
+		} else {
+			msg.Ack(false)
 		}
 	}
 }

@@ -1,9 +1,10 @@
 package queue
 
 import (
-	amqp "github.com/rabbitmq/amqp091-go"
-	"github.com/pahan-fe/lite-streaming/backend/internal/config"
 	"context"
+
+	"github.com/pahan-fe/lite-streaming/backend/internal/config"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type RabbitMQ struct {
@@ -19,7 +20,7 @@ func (r *RabbitMQ) Publish(queueName string, body []byte) error {
 	err = r.channel.PublishWithContext(context.Background(), "", queueName, false, false,
 		amqp.Publishing{
 			ContentType: "application/json",
-			Body: body,
+			Body:        body,
 		})
 
 	return err
@@ -31,7 +32,7 @@ func (r *RabbitMQ) Consume(queueName string) (<-chan amqp.Delivery, error) {
 		return nil, err
 	}
 
-	messages, err := r.channel.Consume(queueName, "", true, false, false, false, nil)
+	messages, err := r.channel.Consume(queueName, "", false, false, false, false, nil)
 	if err != nil {
 		return nil, err
 	}
