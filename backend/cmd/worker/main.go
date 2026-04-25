@@ -17,6 +17,17 @@ import (
 )
 
 func processMessage(body []byte, repo *repository.VideoRepository, str *storage.S3Storage, tc *transcoder.Transcoder) (err error) {
+	var videoId string
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("panic in processMessage: %v", r)
+			if videoId != "" {
+				repo.UpdateStatus(videoId, "failed")
+			}
+			err = fmt.Errorf("panic: %v", r)
+		}
+	}()
+
 	var task map[string]string
 
 	unmarshalErr := json.Unmarshal(body, &task)
@@ -30,7 +41,7 @@ func processMessage(body []byte, repo *repository.VideoRepository, str *storage.
 	}
 	defer os.RemoveAll(tmpDir)
 
-	videoId := task["video_id"]
+	videoId = task["video_id"]
 	defer func() {
 		if err != nil {
 			repo.UpdateStatus(videoId, "failed")
