@@ -14,8 +14,8 @@ export const uploadVideo = async (file: File): Promise<{ id: string }> => {
   return await response.json();
 }
 
-export const fetchVideoList = async (fetchFn: typeof fetch): Promise<Video[]> => {
-  const response = await apiFetch('/api/videos', fetchFn);
+export const fetchVideoList = async (fetchFn: typeof fetch, page = 1, limit = 20): Promise<Video[]> => {
+  const response = await apiFetch(`/api/videos?page=${page}&limit=${limit}`, fetchFn);
   const result = await response.json();
 
   return result.map(mapVideoDtoToVideo)
