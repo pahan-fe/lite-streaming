@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -129,7 +130,10 @@ func main() {
 
 	msgs, _ := mq.Consume(ctx, "transcode")
 	for msg := range msgs {
-		err := processMessage(ctx, msg.Body, repo, str, tc)
+		msgCtx, cancel := context.WithTimeout(ctx, 10*time.Minute)
+		err := processMessage(msgCtx, msg.Body, repo, str, tc)
+		cancel()
+
 		if err != nil {
 			log.Printf("Failed to process message: %v", err)
 			msg.Nack(false, false)
