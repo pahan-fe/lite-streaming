@@ -23,9 +23,9 @@ func main() {
 	})
 
 	cfg := config.Load()
-	db, err := sqlx.Connect("postgres", cfg.DatabaseURL)
-	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+	db, dbErr := sqlx.Connect("postgres", cfg.DatabaseURL)
+	if dbErr != nil {
+		log.Fatalf("Failed to connect to database: %v", dbErr)
 	}
 	defer db.Close()
 

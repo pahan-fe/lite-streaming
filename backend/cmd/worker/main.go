@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -16,13 +17,13 @@ import (
 	"github.com/pahan-fe/lite-streaming/backend/internal/transcoder"
 )
 
-func processMessage(body []byte, repo *repository.VideoRepository, str *storage.S3Storage, tc *transcoder.Transcoder) (err error) {
+func processMessage(ctx context.Context, body []byte, repo *repository.VideoRepository, str *storage.S3Storage, tc *transcoder.Transcoder) (err error) {
 	var videoId string
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("panic in processMessage: %v", r)
 			if videoId != "" {
-				repo.UpdateStatus(videoId, "failed")
+				repo.UpdateStatus(ctx, videoId, "failed")
 			}
 			err = fmt.Errorf("panic: %v", r)
 		}
@@ -44,21 +45,21 @@ func processMessage(body []byte, repo *repository.VideoRepository, str *storage.
 	videoId = task["video_id"]
 	defer func() {
 		if err != nil {
-			repo.UpdateStatus(videoId, "failed")
+			repo.UpdateStatus(ctx, videoId, "failed")
 		}
 	}()
 
-	video, videoErr := repo.GetByID(videoId)
+	video, videoErr := repo.GetByID(ctx, videoId)
 	if videoErr != nil {
 		return fmt.Errorf("Failed to get video by ID: %v", videoErr)
 	}
 
-	originVideo, originVideoErr := str.Get(video.S3RawKey)
+	originVideo, originVideoErr := str.Get(ctx, video.S3RawKey)
 	if originVideoErr != nil {
 		return fmt.Errorf("Failed to get origin video: %v", originVideoErr)
 	}
 
-	repo.UpdateStatus(video.ID, "processing")
+	repo.UpdateStatus(ctx, video.ID, "processing")
 
 	var file = tmpDir + "/input.mp4"
 
@@ -92,18 +93,19 @@ func processMessage(body []byte, repo *repository.VideoRepository, str *storage.
 			ext = "video/mp2t"
 		}
 
-		uploadErr := str.Upload(hlsKey+"/"+segment.Name(), fileContent, ext)
+		uploadErr := str.Upload(ctx, hlsKey+"/"+segment.Name(), fileContent, ext)
 		if uploadErr != nil {
 			return fmt.Errorf("Failed to upload segment: %v", uploadErr)
 		}
 	}
 
-	repo.UpdateStatus(video.ID, "ready")
+	repo.UpdateStatus(ctx, video.ID, "ready")
 
 	return nil
 }
 
 func main() {
+	ctx := context.Background()
 	cfg := config.Load()
 
 	db, err := sqlx.Connect("postgres", cfg.DatabaseURL)
@@ -125,9 +127,9 @@ func main() {
 	repo := repository.NewVideoRepository(db)
 	tc := transcoder.NewTranscoder()
 
-	msgs, _ := mq.Consume("transcode")
+	msgs, _ := mq.Consume(ctx, "transcode")
 	for msg := range msgs {
-		err := processMessage(msg.Body, repo, str, tc)
+		err := processMessage(ctx, msg.Body, repo, str, tc)
 		if err != nil {
 			log.Printf("Failed to process message: %v", err)
 			msg.Nack(false, false)

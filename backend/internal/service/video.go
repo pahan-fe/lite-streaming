@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"strings"
 	"time"
@@ -18,10 +19,10 @@ type VideoService struct {
 	storage *storage.S3Storage
 }
 
-func (s *VideoService) Upload(videoData []byte, contentType string, filename string) (string, error) {
+func (s *VideoService) Upload(ctx context.Context, videoData []byte, contentType string, filename string) (string, error) {
 	id := uuid.New().String()
 
-	storageErr := s.storage.Upload("videos/"+id+"/original/"+filename, videoData, contentType)
+	storageErr := s.storage.Upload(ctx, "videos/"+id+"/original/"+filename, videoData, contentType)
 	if storageErr != nil {
 		return id, storageErr
 	}
@@ -37,7 +38,7 @@ func (s *VideoService) Upload(videoData []byte, contentType string, filename str
 		CreatedAt:        time.Now(),
 		UpdatedAt:        time.Now(),
 	}
-	repoErr := s.repo.Create(video)
+	repoErr := s.repo.Create(ctx, video)
 	if repoErr != nil {
 		return id, repoErr
 	}
@@ -47,7 +48,7 @@ func (s *VideoService) Upload(videoData []byte, contentType string, filename str
 		return id, err
 	}
 
-	queueErr := s.queue.Publish("transcode", jsonData)
+	queueErr := s.queue.Publish(ctx, "transcode", jsonData)
 	if queueErr != nil {
 		return id, queueErr
 	}
@@ -55,8 +56,8 @@ func (s *VideoService) Upload(videoData []byte, contentType string, filename str
 	return id, nil
 }
 
-func (s *VideoService) GetByID(id string) (*model.Video, error) {
-	video, err := s.repo.GetByID(id)
+func (s *VideoService) GetByID(ctx context.Context, id string) (*model.Video, error) {
+	video, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -64,18 +65,18 @@ func (s *VideoService) GetByID(id string) (*model.Video, error) {
 	return video, nil
 }
 
-func (s *VideoService) Delete(id string) error {
-	video, err := s.repo.GetByID(id)
+func (s *VideoService) Delete(ctx context.Context, id string) error {
+	video, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	deleteErr := s.storage.Delete(video.S3RawKey)
+	deleteErr := s.storage.Delete(ctx, video.S3RawKey)
 	if deleteErr != nil {
 		return deleteErr
 	}
 
-	deleteErr = s.repo.Delete(video.ID)
+	deleteErr = s.repo.Delete(ctx, video.ID)
 	if deleteErr != nil {
 		return deleteErr
 	}
@@ -83,8 +84,8 @@ func (s *VideoService) Delete(id string) error {
 	return nil
 }
 
-func (s *VideoService) List(page int, limit int) ([]model.Video, error) {
-	videos, err := s.repo.GetAll(page, limit)
+func (s *VideoService) List(ctx context.Context, page int, limit int) ([]model.Video, error) {
+	videos, err := s.repo.GetAll(ctx, page, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -92,13 +93,13 @@ func (s *VideoService) List(page int, limit int) ([]model.Video, error) {
 	return videos, nil
 }
 
-func (s *VideoService) GetRawStream(id string) ([]byte, string, error) {
-	video, err := s.repo.GetByID(id)
+func (s *VideoService) GetRawStream(ctx context.Context, id string) ([]byte, string, error) {
+	video, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, "", err
 	}
 
-	data, storageErr := s.storage.Get(video.S3RawKey)
+	data, storageErr := s.storage.Get(ctx, video.S3RawKey)
 	if storageErr != nil {
 		return nil, "", storageErr
 	}
@@ -106,14 +107,14 @@ func (s *VideoService) GetRawStream(id string) ([]byte, string, error) {
 	return data, video.ContentType, nil
 }
 
-func (s *VideoService) GetHLSFile(id string, filename string) ([]byte, string, error) {
-	_, videoErr := s.repo.GetByID(id)
+func (s *VideoService) GetHLSFile(ctx context.Context, id string, filename string) ([]byte, string, error) {
+	_, videoErr := s.repo.GetByID(ctx, id)
 	if videoErr != nil {
 		return nil, "", videoErr
 	}
 
 	key := "videos/" + id + "/hls/" + filename
-	data, storageErr := s.storage.Get(key)
+	data, storageErr := s.storage.Get(ctx, key)
 
 	if storageErr != nil {
 		return nil, "", storageErr

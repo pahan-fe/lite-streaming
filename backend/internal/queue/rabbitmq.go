@@ -11,13 +11,13 @@ type RabbitMQ struct {
 	channel *amqp.Channel
 }
 
-func (r *RabbitMQ) Publish(queueName string, body []byte) error {
+func (r *RabbitMQ) Publish(ctx context.Context, queueName string, body []byte) error {
 	_, err := r.channel.QueueDeclare(queueName, true, false, false, false, nil)
 	if err != nil {
 		return err
 	}
 
-	err = r.channel.PublishWithContext(context.Background(), "", queueName, false, false,
+	err = r.channel.PublishWithContext(ctx, "", queueName, false, false,
 		amqp.Publishing{
 			ContentType: "application/json",
 			Body:        body,
@@ -26,13 +26,13 @@ func (r *RabbitMQ) Publish(queueName string, body []byte) error {
 	return err
 }
 
-func (r *RabbitMQ) Consume(queueName string) (<-chan amqp.Delivery, error) {
+func (r *RabbitMQ) Consume(ctx context.Context, queueName string) (<-chan amqp.Delivery, error) {
 	_, err := r.channel.QueueDeclare(queueName, true, false, false, false, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	messages, err := r.channel.Consume(queueName, "", false, false, false, false, nil)
+	messages, err := r.channel.ConsumeWithContext(ctx, queueName, "", false, false, false, false, nil)
 	if err != nil {
 		return nil, err
 	}

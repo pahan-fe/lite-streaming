@@ -15,10 +15,10 @@ type S3Storage struct {
 	bucket string
 }
 
-func (s *S3Storage) Upload(key string, data []byte, contentType string) error {
+func (s *S3Storage) Upload(ctx context.Context, key string, data []byte, contentType string) error {
 	reader := bytes.NewReader(data)
 
-	_, err := s.client.PutObject(context.Background(), s.bucket, key, reader, int64(len(data)), minio.PutObjectOptions{ContentType: contentType})
+	_, err := s.client.PutObject(ctx, s.bucket, key, reader, int64(len(data)), minio.PutObjectOptions{ContentType: contentType})
 	if err != nil {
 		return err
 	}
@@ -26,8 +26,8 @@ func (s *S3Storage) Upload(key string, data []byte, contentType string) error {
 	return nil
 }
 
-func (s *S3Storage) Get(key string) ([]byte, error) {
-	obj, objErr := s.client.GetObject(context.Background(), s.bucket, key, minio.GetObjectOptions{})
+func (s *S3Storage) Get(ctx context.Context, key string) ([]byte, error) {
+	obj, objErr := s.client.GetObject(ctx, s.bucket, key, minio.GetObjectOptions{})
 	if objErr != nil {
 		return nil, objErr
 	}
@@ -40,8 +40,8 @@ func (s *S3Storage) Get(key string) ([]byte, error) {
 	return data, nil
 }
 
-func (s *S3Storage) Delete(key string) error {
-	err := s.client.RemoveObject(context.Background(), s.bucket, key, minio.RemoveObjectOptions{})
+func (s *S3Storage) Delete(ctx context.Context, key string) error {
+	err := s.client.RemoveObject(ctx, s.bucket, key, minio.RemoveObjectOptions{})
 	if err != nil {
 		return err
 	}
@@ -50,6 +50,8 @@ func (s *S3Storage) Delete(key string) error {
 }
 
 func NewS3Storage(c *config.Config) (*S3Storage, error) {
+	ctx := context.Background()
+
 	s, sErr := minio.New(c.S3Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(c.S3AccessKey, c.S3SecretKey, ""),
 		Secure: c.S3UseSSL,
@@ -57,8 +59,6 @@ func NewS3Storage(c *config.Config) (*S3Storage, error) {
 	if sErr != nil {
 		return nil, sErr
 	}
-
-	ctx := context.Background()
 
 	exist, existErr := s.BucketExists(ctx, c.S3Bucket)
 	if existErr != nil {

@@ -14,6 +14,8 @@ type VideoHandler struct {
 }
 
 func (h *VideoHandler) HandleUpload(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	err := r.ParseMultipartForm(1 << 30)
 	if err != nil {
 		http.Error(w, "Error parsing form data", http.StatusBadRequest)
@@ -33,7 +35,7 @@ func (h *VideoHandler) HandleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, uploadErr := h.service.Upload(data, header.Header.Get("Content-Type"), header.Filename)
+	id, uploadErr := h.service.Upload(ctx, data, header.Header.Get("Content-Type"), header.Filename)
 	if uploadErr != nil {
 		http.Error(w, "Error uploading video", http.StatusInternalServerError)
 		return
@@ -44,6 +46,8 @@ func (h *VideoHandler) HandleUpload(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *VideoHandler) HandleList(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	pageStr := r.URL.Query().Get("page")
 	limitStr := r.URL.Query().Get("limit")
 
@@ -57,7 +61,7 @@ func (h *VideoHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 		limit = 20
 	}
 
-	videos, videosErr := h.service.List(page, limit)
+	videos, videosErr := h.service.List(ctx, page, limit)
 	if videosErr != nil {
 		http.Error(w, "Error fetching videos", http.StatusInternalServerError)
 		return
@@ -68,9 +72,11 @@ func (h *VideoHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *VideoHandler) HandleGetByID(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	id := r.PathValue("id")
 
-	video, videoErr := h.service.GetByID(id)
+	video, videoErr := h.service.GetByID(ctx, id)
 	if videoErr != nil {
 		http.Error(w, "Video not found", http.StatusNotFound)
 		return
@@ -81,9 +87,11 @@ func (h *VideoHandler) HandleGetByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *VideoHandler) HandleDelete(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	id := r.PathValue("id")
 
-	deleteErr := h.service.Delete(id)
+	deleteErr := h.service.Delete(ctx, id)
 	if deleteErr != nil {
 		http.Error(w, "Error deleting video", http.StatusInternalServerError)
 		return
@@ -93,9 +101,11 @@ func (h *VideoHandler) HandleDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *VideoHandler) HandleStream(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	id := r.PathValue("id")
 
-	data, contentType, err := h.service.GetRawStream(id)
+	data, contentType, err := h.service.GetRawStream(ctx, id)
 	if err != nil {
 		http.Error(w, "Error fetching video stream", http.StatusInternalServerError)
 		return
@@ -106,10 +116,12 @@ func (h *VideoHandler) HandleStream(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *VideoHandler) HandleHLSFile(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	id := r.PathValue("id")
 	filename := r.PathValue("filename")
 
-	data, contentType, err := h.service.GetHLSFile(id, filename)
+	data, contentType, err := h.service.GetHLSFile(ctx, id, filename)
 	if err != nil {
 		http.Error(w, "Error fetching HLS file", http.StatusInternalServerError)
 		return
