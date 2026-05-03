@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -16,7 +16,10 @@ import (
 )
 
 func main() {
-	fmt.Println("Starting API server on port 8080...")
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+
+	slog.Info("starting api server", "port", 8080)
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ok"))
@@ -25,18 +28,21 @@ func main() {
 	cfg := config.Load()
 	db, dbErr := sqlx.Connect("postgres", cfg.DatabaseURL)
 	if dbErr != nil {
-		log.Fatalf("Failed to connect to database: %v", dbErr)
+		slog.Error("Failed to connect to database", "err", dbErr)
+		os.Exit(1)
 	}
 	defer db.Close()
 
 	str, storageErr := storage.NewS3Storage(&cfg)
 	if storageErr != nil {
-		log.Fatalf("Failed to initialize storage: %v", storageErr)
+		slog.Error("Failed to initialize storage", "err", storageErr)
+		os.Exit(1)
 	}
 
 	mq, queueErr := queue.NewRabbitMQ(&cfg)
 	if queueErr != nil {
-		log.Fatalf("Failed to initialize queue: %v", queueErr)
+		slog.Error("Failed to initialize queue", "err", queueErr)
+		os.Exit(1)
 	}
 
 	repo := repository.NewVideoRepository(db)
@@ -50,5 +56,9 @@ func main() {
 	http.HandleFunc("GET /api/videos/{id}/stream", videoHandler.HandleStream)
 	http.HandleFunc("GET /api/videos/{id}/hls/{filename}", videoHandler.HandleHLSFile)
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		slog.Error("Failed to start server", "err", err)
+		os.Exit(1)
+	}
 }

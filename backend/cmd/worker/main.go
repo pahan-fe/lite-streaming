@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"strings"
 	"time"
@@ -22,7 +22,12 @@ func processMessage(ctx context.Context, body []byte, repo *repository.VideoRepo
 	var videoId string
 	defer func() {
 		if r := recover(); r != nil {
-			log.Printf("panic in processMessage: %v", r)
+			slog.ErrorContext(
+				ctx,
+				"panic in processMessage",
+				"err", r,
+				"video_id", videoId,
+			)
 			if videoId != "" {
 				repo.UpdateStatus(ctx, videoId, "failed")
 			}
@@ -106,23 +111,29 @@ func processMessage(ctx context.Context, body []byte, repo *repository.VideoRepo
 }
 
 func main() {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+
 	ctx := context.Background()
 	cfg := config.Load()
 
 	db, err := sqlx.Connect("postgres", cfg.DatabaseURL)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		slog.Error("Failed to connect to database", "err", err)
+		os.Exit(1)
 	}
 	defer db.Close()
 
 	str, storageErr := storage.NewS3Storage(&cfg)
 	if storageErr != nil {
-		log.Fatalf("Failed to initialize storage: %v", storageErr)
+		slog.Error("Failed to initialize storage", "err", storageErr)
+		os.Exit(1)
 	}
 
 	mq, queueErr := queue.NewRabbitMQ(&cfg)
 	if queueErr != nil {
-		log.Fatalf("Failed to initialize queue: %v", queueErr)
+		slog.Error("Failed to initialize queue", "err", queueErr)
+		os.Exit(1)
 	}
 
 	repo := repository.NewVideoRepository(db)
@@ -135,7 +146,11 @@ func main() {
 		cancel()
 
 		if err != nil {
-			log.Printf("Failed to process message: %v", err)
+			slog.ErrorContext(
+				ctx,
+				"Failed to process message",
+				"err", err,
+			)
 			msg.Nack(false, false)
 		} else {
 			msg.Ack(false)
