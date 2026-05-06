@@ -9,6 +9,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/pahan-fe/lite-streaming/backend/internal/config"
 	"github.com/pahan-fe/lite-streaming/backend/internal/handler"
+	"github.com/pahan-fe/lite-streaming/backend/internal/middleware"
 	"github.com/pahan-fe/lite-streaming/backend/internal/queue"
 	"github.com/pahan-fe/lite-streaming/backend/internal/repository"
 	"github.com/pahan-fe/lite-streaming/backend/internal/service"
@@ -20,10 +21,11 @@ func main() {
 	slog.SetDefault(logger)
 
 	mux := http.NewServeMux()
+	loggerMux := middleware.Logging(mux)
 
 	slog.Info("starting api server", "port", 8080)
 
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ok"))
 	})
 
@@ -58,7 +60,7 @@ func main() {
 	mux.HandleFunc("GET /api/videos/{id}/stream", videoHandler.HandleStream)
 	mux.HandleFunc("GET /api/videos/{id}/hls/{filename}", videoHandler.HandleHLSFile)
 
-	err := http.ListenAndServe(":8080", mux)
+	err := http.ListenAndServe(":8080", loggerMux)
 	if err != nil {
 		slog.Error("Failed to start server", "err", err)
 		os.Exit(1)
