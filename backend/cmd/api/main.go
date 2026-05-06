@@ -19,9 +19,11 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
+	mux := http.NewServeMux()
+
 	slog.Info("starting api server", "port", 8080)
 
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ok"))
 	})
 
@@ -49,14 +51,14 @@ func main() {
 	videoService := service.NewVideoService(repo, mq, str)
 	videoHandler := handler.NewVideoHandler(videoService)
 
-	http.HandleFunc("POST /api/videos", videoHandler.HandleUpload)
-	http.HandleFunc("GET /api/videos", videoHandler.HandleList)
-	http.HandleFunc("GET /api/videos/{id}", videoHandler.HandleGetByID)
-	http.HandleFunc("DELETE /api/videos/{id}", videoHandler.HandleDelete)
-	http.HandleFunc("GET /api/videos/{id}/stream", videoHandler.HandleStream)
-	http.HandleFunc("GET /api/videos/{id}/hls/{filename}", videoHandler.HandleHLSFile)
+	mux.HandleFunc("POST /api/videos", videoHandler.HandleUpload)
+	mux.HandleFunc("GET /api/videos", videoHandler.HandleList)
+	mux.HandleFunc("GET /api/videos/{id}", videoHandler.HandleGetByID)
+	mux.HandleFunc("DELETE /api/videos/{id}", videoHandler.HandleDelete)
+	mux.HandleFunc("GET /api/videos/{id}/stream", videoHandler.HandleStream)
+	mux.HandleFunc("GET /api/videos/{id}/hls/{filename}", videoHandler.HandleHLSFile)
 
-	err := http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
 		slog.Error("Failed to start server", "err", err)
 		os.Exit(1)
