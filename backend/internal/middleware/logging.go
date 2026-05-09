@@ -24,6 +24,15 @@ func Logging(next http.Handler) http.Handler {
 		next.ServeHTTP(sr, r)
 
 		duration := time.Since(startTime)
-		slog.InfoContext(r.Context(), "http request", "method", r.Method, "path", r.URL.Path, "status", sr.status, "duration", duration.Milliseconds())
+
+		slog.InfoContext(
+			r.Context(),
+			"http request",
+			"method", r.Method,
+			"path", r.URL.Path,
+			"status", sr.status,
+			"duration_ms", duration.Milliseconds(),
+			"request_id", RequestIDFromContext(r.Context()),
+		)
 	})
 }
