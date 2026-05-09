@@ -21,7 +21,7 @@ func main() {
 	slog.SetDefault(logger)
 
 	mux := http.NewServeMux()
-	loggerMux := middleware.Logging(mux)
+	loggerMux := middleware.Logging(middleware.Recovery(mux))
 
 	slog.Info("starting api server", "port", 8080)
 
