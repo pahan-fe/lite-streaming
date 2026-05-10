@@ -17,8 +17,9 @@ import (
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	slog.SetDefault(logger)
+	base := slog.NewJSONHandler(os.Stdout, nil)
+	slogHandler := &middleware.ContextHandler{Handler: base}
+	slog.SetDefault(slog.New(slogHandler))
 
 	mux := http.NewServeMux()
 	loggerMux := middleware.RequestID(middleware.Logging(middleware.Recovery(mux)))

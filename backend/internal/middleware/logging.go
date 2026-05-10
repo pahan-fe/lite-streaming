@@ -32,7 +32,6 @@ func Logging(next http.Handler) http.Handler {
 			"path", r.URL.Path,
 			"status", sr.status,
 			"duration_ms", duration.Milliseconds(),
-			"request_id", RequestIDFromContext(r.Context()),
 		)
 	})
 }
