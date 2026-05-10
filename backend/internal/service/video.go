@@ -8,15 +8,29 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pahan-fe/lite-streaming/backend/internal/model"
-	"github.com/pahan-fe/lite-streaming/backend/internal/queue"
-	"github.com/pahan-fe/lite-streaming/backend/internal/repository"
-	"github.com/pahan-fe/lite-streaming/backend/internal/storage"
 )
 
+type Repo interface {
+	Create(ctx context.Context, video *model.Video) error
+	GetByID(ctx context.Context, id string) (*model.Video, error)
+	GetAll(ctx context.Context, page int, limit int) ([]model.Video, error)
+	Delete(ctx context.Context, id string) error
+}
+
+type Publisher interface {
+	Publish(ctx context.Context, queueName string, body []byte) error
+}
+
+type Storage interface {
+	Upload(ctx context.Context, key string, data []byte, contentType string) error
+	Get(ctx context.Context, key string) ([]byte, error)
+	Delete(ctx context.Context, key string) error
+}
+
 type VideoService struct {
-	repo    *repository.VideoRepository
-	queue   *queue.RabbitMQ
-	storage *storage.S3Storage
+	repo    Repo
+	queue   Publisher
+	storage Storage
 }
 
 func (s *VideoService) Upload(ctx context.Context, videoData []byte, contentType string, filename string) (string, error) {
@@ -130,6 +144,6 @@ func (s *VideoService) GetHLSFile(ctx context.Context, id string, filename strin
 	return data, contentType, nil
 }
 
-func NewVideoService(repo *repository.VideoRepository, queue *queue.RabbitMQ, storage *storage.S3Storage) *VideoService {
+func NewVideoService(repo Repo, queue Publisher, storage Storage) *VideoService {
 	return &VideoService{repo: repo, queue: queue, storage: storage}
 }
