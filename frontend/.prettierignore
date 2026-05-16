@@ -1,0 +1,7 @@
+.nuxt/
+.output/
+node_modules/
+public/
+dist/
+pnpm-lock.yaml
+*.d.ts
