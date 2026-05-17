@@ -16,9 +16,13 @@ export default defineNuxtConfig({
         '/api': 'http://localhost:8080',
       },
     },
+    optimizeDeps: {
+      include: ['class-variance-authority', 'clsx', 'reka-ui', 'tailwind-merge', 'zod'],
+    },
   },
 
   runtimeConfig: {
+    apiBase: 'http://localhost:8080',
     public: {
       apiBase: '',
     },
@@ -33,5 +37,13 @@ export default defineNuxtConfig({
     config: {
       stylistic: false,
     },
+  },
+
+  components: [
+    { path: '~/features', pathPrefix: false },
+    { path: '~/shared/components', pattern: '**/*.vue', pathPrefix: false },
+  ],
+  imports: {
+    dirs: ['features/**/composables', 'features/**/api'],
   },
 })
