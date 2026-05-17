@@ -5,12 +5,23 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
 
-  modules: ['@nuxt/eslint'],
+  modules: ['@nuxt/eslint', '@vueuse/nuxt'],
 
   css: ['~/assets/css/main.css'],
 
   vite: {
     plugins: [tailwindcss()],
+    server: {
+      proxy: {
+        '/api': 'http://localhost:8080',
+      },
+    },
+  },
+
+  runtimeConfig: {
+    public: {
+      apiBase: '',
+    },
   },
 
   typescript: {
