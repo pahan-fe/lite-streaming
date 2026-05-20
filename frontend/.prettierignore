@@ -4,4 +4,4 @@ node_modules/
 public/
 dist/
 pnpm-lock.yaml
-*.d.ts
+.nuxt/**/*.d.ts 

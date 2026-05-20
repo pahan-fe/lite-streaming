@@ -1,9 +1,9 @@
 import type { $Fetch } from 'ofetch'
-  
+
 declare module '#app' {
-    interface NuxtApp {
-        $api: $Fetch
-    }
+  interface NuxtApp {
+    $api: $Fetch
+  }
 }
 
 export {}
