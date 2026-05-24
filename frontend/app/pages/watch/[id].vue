@@ -11,6 +11,14 @@ const videoId = route.params.id as string
 
 const { data: video, status, error } = await useVideo(videoId)
 
+if (error.value) {
+  throw createError({
+    statusCode: error.value.statusCode ?? 500,
+    statusMessage: 'Video not found',
+    fatal: true,
+  })
+}
+
 useSeoMeta({
   title: () => video.value?.originalFilename ?? 'Video',
   description: () =>
@@ -26,7 +34,6 @@ useSeoMeta({
       <Skeleton class="h-8 w-1/2" />
       <Skeleton class="aspect-video w-full" />
     </div>
-    <div v-else-if="status === 'error'" class="text-destructive">{{ error?.message }}</div>
     <div v-else-if="video">
       <div class="flex items-center justify-between">
         <h1 class="mt-2 text-2xl font-bold">{{ video.originalFilename }}</h1>

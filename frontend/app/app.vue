@@ -2,7 +2,7 @@
 import { Toaster } from '@/shared/components/ui/sonner'
 
 useHead({
-  titleTemplate: title => (title ? `${title} | lite-streaming` : 'lite-streaming'),
+  titleTemplate: (title) => (title ? `${title} | lite-streaming` : 'lite-streaming'),
 })
 </script>
 
