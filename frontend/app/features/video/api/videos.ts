@@ -27,3 +27,11 @@ export const fetchVideoById = async (id: string) => {
 
   return VideoSchema.parse(response)
 }
+
+export const deleteVideo = (id: string) => {
+  const { $api } = useNuxtApp()
+
+  return $api(`/api/videos/${id}`, {
+    method: 'DELETE',
+  })
+}
