@@ -1,6 +1,6 @@
 import z from 'zod'
 
-const VideoSchema = z.object({
+export const VideoSchema = z.object({
   id: z.string(),
   originalFilename: z.string(),
   contentType: z.string(),

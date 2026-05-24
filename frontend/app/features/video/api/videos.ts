@@ -1,4 +1,4 @@
-import { VideoListSchema } from '../schemas/video.schema'
+import { VideoListSchema, VideoSchema } from '../schemas/video.schema'
 
 export const fetchVideoList = async () => {
   const { $api } = useNuxtApp()
@@ -18,4 +18,12 @@ export const uploadVideo = (file: File) => {
     method: 'POST',
     body: formData,
   })
+}
+
+export const fetchVideoById = async (id: string) => {
+  const { $api } = useNuxtApp()
+
+  const response = await $api(`/api/videos/${id}`)
+
+  return VideoSchema.parse(response)
 }
