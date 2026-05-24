@@ -35,5 +35,5 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <video ref="videoEl" controls class="h-auto w-full" />
+  <video ref="videoEl" controls class="block aspect-video w-full bg-black" />
 </template>

@@ -35,19 +35,55 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <form class="flex flex-col gap-4" @submit.prevent="handleSubmit">
-    <h1 class="text-2xl font-bold">Upload page</h1>
+  <form class="mx-auto flex max-w-xl flex-col gap-8" @submit.prevent="handleSubmit">
+    <header>
+      <p class="mb-2 text-xs font-medium tracking-[0.2em] text-primary uppercase">New upload</p>
+      <h1 class="font-display text-4xl font-medium tracking-tight md:text-5xl">Upload a video</h1>
+      <p class="mt-3 text-sm text-muted-foreground">
+        We'll transcode it to HLS so it streams smoothly on any device.
+      </p>
+    </header>
 
-    <p v-if="error" class="text-destructive">{{ error.message }}</p>
-    <p v-if="file">{{ file.name }} ({{ formatBytes(file.size) }})</p>
+    <label
+      class="group relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border px-6 py-14 text-center transition-colors hover:border-primary/50 hover:bg-card"
+      :class="file && 'border-primary/40 bg-card'"
+    >
+      <input type="file" accept="video/*" class="sr-only" @change="handleFileChange" />
 
-    <Label>
-      Video file
-      <Input type="file" accept="video/*" @change="handleFileChange" />
-    </Label>
+      <span
+        class="grid size-12 place-items-center rounded-full bg-secondary text-muted-foreground transition-colors group-hover:bg-primary/15 group-hover:text-primary"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          class="size-5 fill-none stroke-current stroke-2"
+          aria-hidden="true"
+        >
+          <path d="M12 16V4m0 0L7 9m5-5l5 5" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M4 17v2a1 1 0 001 1h14a1 1 0 001-1v-2" stroke-linecap="round" />
+        </svg>
+      </span>
 
-    <Button :disabled="!file || isPending" type="submit">
-      {{ isPending ? 'Uploading...' : 'Upload' }}
+      <template v-if="file">
+        <p class="max-w-full truncate font-medium">{{ file.name }}</p>
+        <p class="text-xs text-muted-foreground tabular-nums">
+          {{ formatBytes(file.size) }} &middot; click to replace
+        </p>
+      </template>
+      <template v-else>
+        <p class="font-medium">Click to choose a video</p>
+        <p class="text-xs text-muted-foreground">MP4, MOV, WebM &mdash; any format works</p>
+      </template>
+    </label>
+
+    <p
+      v-if="error"
+      class="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+    >
+      {{ error.message }}
+    </p>
+
+    <Button :disabled="!file || isPending" type="submit" class="h-11 text-sm">
+      {{ isPending ? 'Uploading…' : 'Upload video' }}
     </Button>
   </form>
 </template>
