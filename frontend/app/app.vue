@@ -4,6 +4,12 @@ import { Toaster } from '@/shared/components/ui/sonner'
 useHead({
   titleTemplate: (title) => (title ? `${title} | lite-streaming` : 'lite-streaming'),
 })
+
+useSeoMeta({
+  ogSiteName: 'lite-streaming',
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
+})
 </script>
 
 <template>

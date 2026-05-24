@@ -19,12 +19,21 @@ if (error.value) {
   })
 }
 
+const pageTitle = computed(() => video.value?.originalFilename ?? 'Video')
+const pageDescription = computed(() =>
+  video.value
+    ? `Watch ${video.value.originalFilename} on lite-streaming.`
+    : 'Watch video on lite-streaming.',
+)
+
 useSeoMeta({
-  title: () => video.value?.originalFilename ?? 'Video',
-  description: () =>
-    video.value
-      ? `Watch ${video.value.originalFilename} on lite-streaming.`
-      : 'Watch video on lite-streaming.',
+  title: () => pageTitle.value,
+  description: () => pageDescription.value,
+  ogTitle: () => pageTitle.value,
+  ogDescription: () => pageDescription.value,
+  ogType: 'video.other',
+  twitterTitle: () => pageTitle.value,
+  twitterDescription: () => pageDescription.value,
 })
 </script>
 
