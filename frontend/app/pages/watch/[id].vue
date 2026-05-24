@@ -10,6 +10,14 @@ const route = useRoute()
 const videoId = route.params.id as string
 
 const { data: video, status, error } = await useVideo(videoId)
+
+useSeoMeta({
+  title: () => video.value?.originalFilename ?? 'Video',
+  description: () =>
+    video.value
+      ? `Watch ${video.value.originalFilename} on lite-streaming.`
+      : 'Watch video on lite-streaming.',
+})
 </script>
 
 <template>

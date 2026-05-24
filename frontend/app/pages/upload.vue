@@ -6,6 +6,11 @@ import { formatBytes } from '~/shared/lib/formatBytes'
 
 const { upload, isPending, error } = useUploadVideo()
 
+useSeoMeta({
+  title: 'Upload',
+  description: 'Upload a new video for streaming.',
+})
+
 const file = ref<File | null>(null)
 
 const handleFileChange = (e: Event) => {

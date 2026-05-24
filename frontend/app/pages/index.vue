@@ -5,6 +5,11 @@ import VideoList from '../features/video/components/VideoList.vue'
 import VideoListSkeleton from '../features/video/components/VideoListSkeleton.vue'
 
 const { data: videoList, status, error } = useVideoList()
+
+useSeoMeta({
+  title: 'Library',
+  description: 'Browse and stream your uploaded videos.',
+})
 </script>
 
 <template>
