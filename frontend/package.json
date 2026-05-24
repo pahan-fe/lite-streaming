@@ -9,8 +9,7 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "format": "prettier --write .",
+    "lint:fix": "eslint . --fix && prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "vue-tsc --noEmit"
   },
@@ -21,6 +20,7 @@
     "@vueuse/nuxt": "^14.3.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "hls.js": "^1.6.16",
     "nuxt": "^4.4.5",
     "reka-ui": "^2.9.7",
     "tailwind-merge": "^3.6.0",

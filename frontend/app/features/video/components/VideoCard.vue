@@ -20,15 +20,17 @@ const createdAt = useDateFormat(() => props.video.createdAt, 'MMM D, YYYY')
 </script>
 
 <template>
-  <Card>
-    <CardHeader>
-      <CardTitle>{{ video.originalFilename }}</CardTitle>
-      <CardDescription>{{ createdAt }}</CardDescription>
-    </CardHeader>
-    <CardContent>
-      <Badge :variant="video.status === 'ready' ? 'default' : 'secondary'">
-        {{ video.status }}
-      </Badge>
-    </CardContent>
-  </Card>
+  <NuxtLink :to="`/watch/${video.id}`">
+    <Card>
+      <CardHeader>
+        <CardTitle>{{ video.originalFilename }}</CardTitle>
+        <CardDescription>{{ createdAt }}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Badge :variant="video.status === 'ready' ? 'default' : 'secondary'">
+          {{ video.status }}
+        </Badge>
+      </CardContent>
+    </Card>
+  </NuxtLink>
 </template>
