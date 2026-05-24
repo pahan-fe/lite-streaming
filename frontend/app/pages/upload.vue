@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { toast } from 'vue-sonner'
+
 import { useUploadVideo } from '~/features/video/composables/useUploadVideo'
 import { formatBytes } from '~/shared/lib/formatBytes'
 
@@ -17,7 +19,13 @@ const handleSubmit = async () => {
     return
   }
 
-  await upload(file.value)
+  try {
+    await upload(file.value)
+    toast.success('Video uploaded! Processing started.')
+    await navigateTo('/', { replace: true })
+  } catch {
+    toast.error('Upload failed', { description: error.value?.message })
+  }
 }
 </script>
 

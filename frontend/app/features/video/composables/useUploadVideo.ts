@@ -11,9 +11,9 @@ export const useUploadVideo = () => {
     try {
       await uploadVideo(file)
       await refreshNuxtData('videos')
-      await navigateTo('/', { replace: true })
     } catch (err) {
       error.value = err instanceof Error ? err : new Error('Unknown error')
+      throw err
     } finally {
       isPending.value = false
     }

@@ -7,7 +7,7 @@ export default defineNuxtConfig({
 
   modules: ['@nuxt/eslint', '@vueuse/nuxt'],
 
-  css: ['~/assets/css/main.css'],
+  css: ['~/assets/css/main.css', 'vue-sonner/style.css'],
 
   vite: {
     plugins: [tailwindcss()],

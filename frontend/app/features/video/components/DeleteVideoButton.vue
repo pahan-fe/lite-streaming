@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { toast } from 'vue-sonner'
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,13 +23,18 @@ type Props = {
 
 const props = defineProps<Props>()
 
-const { deleteById, isPending } = useDeleteVideo()
+const { deleteById, isPending, error } = useDeleteVideo()
 
 const handleDelete = async () => {
-  await deleteById(props.videoId)
+  try {
+    await deleteById(props.videoId)
+    toast.success('Video deleted')
 
-  if (props.redirectTo) {
-    await navigateTo(props.redirectTo, { replace: true })
+    if (props.redirectTo) {
+      await navigateTo(props.redirectTo, { replace: true })
+    }
+  } catch {
+    toast.error('Failed to delete video', { description: error.value?.message })
   }
 }
 </script>
