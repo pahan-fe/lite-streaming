@@ -2,6 +2,7 @@
 import DeleteVideoButton from '@/features/video/components/DeleteVideoButton.vue'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { formatBytes } from '~/shared/lib/formatBytes'
+import { formatDate } from '~/shared/lib/formatDate'
 
 const VideoPlayer = defineAsyncComponent(
   () => import('@/features/video/components/VideoPlayer.vue'),
@@ -12,7 +13,7 @@ const videoId = route.params.id as string
 
 const { data: video, status, error } = await useVideo(videoId)
 
-const createdAt = useDateFormat(() => video.value?.createdAt ?? new Date(), 'MMMM D, YYYY')
+const createdAt = computed(() => (video.value ? formatDate(video.value.createdAt, 'long') : ''))
 
 if (error.value) {
   throw createError({

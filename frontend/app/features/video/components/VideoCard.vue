@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { formatBytes } from '~/shared/lib/formatBytes'
+import { formatDate } from '~/shared/lib/formatDate'
 
 import DeleteVideoButton from './DeleteVideoButton.vue'
 
@@ -11,7 +12,7 @@ type Props = {
 
 const props = defineProps<Props>()
 
-const createdAt = useDateFormat(() => props.video.createdAt, 'MMM D, YYYY')
+const createdAt = computed(() => formatDate(props.video.createdAt))
 
 const isReady = computed(() => props.video.status === 'ready')
 </script>
