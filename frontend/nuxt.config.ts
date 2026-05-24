@@ -28,7 +28,7 @@ export default defineNuxtConfig({
     plugins: [tailwindcss()],
     server: {
       proxy: {
-        '/api': 'http://localhost:8080',
+        '/api': process.env.NUXT_API_BASE || 'http://localhost:8080',
       },
     },
     optimizeDeps: {
