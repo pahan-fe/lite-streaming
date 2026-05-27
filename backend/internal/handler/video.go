@@ -48,20 +48,15 @@ func (h *VideoHandler) HandleUpload(w http.ResponseWriter, r *http.Request) {
 func (h *VideoHandler) HandleList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	pageStr := r.URL.Query().Get("page")
+	cursor := r.URL.Query().Get("cursor")
 	limitStr := r.URL.Query().Get("limit")
-
-	page, pageErr := strconv.Atoi(pageStr)
-	if pageErr != nil || page < 1 {
-		page = 1
-	}
 
 	limit, limitErr := strconv.Atoi(limitStr)
 	if limitErr != nil || limit < 1 {
 		limit = 20
 	}
 
-	videos, videosErr := h.service.List(ctx, page, limit)
+	videos, videosErr := h.service.List(ctx, cursor, limit)
 	if videosErr != nil {
 		http.Error(w, "Error fetching videos", http.StatusInternalServerError)
 		return
