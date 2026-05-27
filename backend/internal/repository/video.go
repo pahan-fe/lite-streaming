@@ -29,15 +29,31 @@ func (r *VideoRepository) GetByID(ctx context.Context, id string) (*model.Video,
 	return &video, nil
 }
 
-func (r *VideoRepository) GetAll(ctx context.Context, page int, limit int) ([]model.Video, error) {
+func (r *VideoRepository) GetAll(ctx context.Context, cursor *model.Cursor, limit int) ([]model.Video, error) {
 	videos := []model.Video{}
+	var err error
 
-	offset := (page - 1) * limit
+	if cursor == nil {
+		err = r.db.SelectContext(ctx, &videos,
+			`SELECT * FROM videos 
+			ORDER BY created_at DESC, id DESC
+			LIMIT $1`,
+			limit,
+		)
+	} else {
+		err = r.db.SelectContext(ctx, &videos,
+			`SELECT * FROM videos 
+			WHERE created_at < $1 OR (created_at = $1 AND id < $2)
+			ORDER BY created_at DESC, id DESC
+			LIMIT ч`,
+			cursor.CreatedAt, cursor.ID, limit,
+		)
+	}
 
-	err := r.db.SelectContext(ctx, &videos, "SELECT * FROM videos ORDER BY created_at DESC LIMIT $1 OFFSET $2", limit, offset)
 	if err != nil {
 		return nil, err
 	}
+
 	return videos, nil
 }
 
