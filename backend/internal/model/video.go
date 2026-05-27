@@ -20,6 +20,6 @@ type Video struct {
 }
 
 type VideoListResponse struct {
-	Items      []Video `json:"items"`
-	NextCursor *Cursor `json:"nextCursor"`
+	Items      []Video
+	NextCursor *string
 }

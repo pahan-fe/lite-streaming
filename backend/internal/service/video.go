@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"strings"
 	"time"
 
@@ -13,7 +15,7 @@ import (
 type Repo interface {
 	Create(ctx context.Context, video *model.Video) error
 	GetByID(ctx context.Context, id string) (*model.Video, error)
-	GetAll(ctx context.Context, page int, limit int) ([]model.Video, error)
+	GetAll(ctx context.Context, cursor *model.Cursor, limit int) ([]model.Video, error)
 	Delete(ctx context.Context, id string) error
 }
 
@@ -31,6 +33,34 @@ type VideoService struct {
 	repo    Repo
 	queue   Publisher
 	storage Storage
+}
+
+func encodeCursor(c model.Cursor) string {
+	raw := c.CreatedAt.Format(time.RFC3339Nano) + "|" + c.ID
+	return base64.URLEncoding.EncodeToString([]byte(raw))
+}
+
+func decodeCursor(s string) (*model.Cursor, error) {
+	if s == "" {
+		return nil, nil
+	}
+
+	decoded, err := base64.URLEncoding.DecodeString(s)
+	if err != nil {
+		return nil, err
+	}
+
+	parts := strings.SplitN(string(decoded), "|", 2)
+	if len(parts) != 2 {
+		return nil, errors.New("invalid cursor")
+	}
+
+	createdAt, err := time.Parse(time.RFC3339Nano, parts[0])
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.Cursor{ID: parts[1], CreatedAt: createdAt}, nil
 }
 
 func (s *VideoService) Upload(ctx context.Context, videoData []byte, contentType string, filename string) (string, error) {
@@ -98,13 +128,30 @@ func (s *VideoService) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (s *VideoService) List(ctx context.Context, page int, limit int) ([]model.Video, error) {
-	videos, err := s.repo.GetAll(ctx, page, limit)
-	if err != nil {
-		return nil, err
+func (s *VideoService) List(ctx context.Context, cursor string, limit int) (model.VideoListResponse, error) {
+	decodedCursor, decodeErr := decodeCursor(cursor)
+	if decodeErr != nil {
+		return model.VideoListResponse{}, decodeErr
 	}
 
-	return videos, nil
+	videos, err := s.repo.GetAll(ctx, decodedCursor, limit+1)
+	if err != nil {
+		return model.VideoListResponse{}, err
+	}
+
+	hasNext := len(videos) > limit
+	if hasNext {
+		videos = videos[:limit]
+	}
+
+	var nextCursor *string
+	if hasNext {
+		lastVideo := videos[len(videos)-1]
+		encoded := encodeCursor(model.Cursor{ID: lastVideo.ID, CreatedAt: lastVideo.CreatedAt})
+		nextCursor = &encoded
+	}
+
+	return model.VideoListResponse{Items: videos, NextCursor: nextCursor}, nil
 }
 
 func (s *VideoService) GetRawStream(ctx context.Context, id string) ([]byte, string, error) {

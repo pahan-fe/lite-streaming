@@ -35,7 +35,7 @@ func (m *mockRepo) GetByID(ctx context.Context, id string) (*model.Video, error)
 
 	return m.getByIDVideo, m.getByIDErr
 }
-func (m *mockRepo) GetAll(ctx context.Context, page int, limit int) ([]model.Video, error) {
+func (m *mockRepo) GetAll(ctx context.Context, cursor *model.Cursor, limit int) ([]model.Video, error) {
 	return nil, nil
 }
 func (m *mockRepo) Delete(ctx context.Context, id string) error {
