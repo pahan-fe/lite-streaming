@@ -35,17 +35,19 @@ func (r *VideoRepository) GetAll(ctx context.Context, cursor *model.Cursor, limi
 
 	if cursor == nil {
 		err = r.db.SelectContext(ctx, &videos,
-			`SELECT * FROM videos 
+			`SELECT * 
+			FROM videos 
 			ORDER BY created_at DESC, id DESC
 			LIMIT $1`,
 			limit,
 		)
 	} else {
 		err = r.db.SelectContext(ctx, &videos,
-			`SELECT * FROM videos 
+			`SELECT * 
+			FROM videos 
 			WHERE created_at < $1 OR (created_at = $1 AND id < $2)
 			ORDER BY created_at DESC, id DESC
-			LIMIT ч`,
+			LIMIT $3`,
 			cursor.CreatedAt, cursor.ID, limit,
 		)
 	}
