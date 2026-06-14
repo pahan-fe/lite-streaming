@@ -11,6 +11,10 @@ export const VideoSchema = z.object({
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 })
-
 export type Video = z.infer<typeof VideoSchema>
-export const VideoListSchema = z.array(VideoSchema)
+
+export const VideoListResponseSchema = z.object({
+  items: z.array(VideoSchema),
+  nextCursor: z.string().nullable(),
+})
+export type VideoListResponse = z.infer<typeof VideoListResponseSchema>

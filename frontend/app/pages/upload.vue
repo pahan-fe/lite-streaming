@@ -27,6 +27,9 @@ const handleSubmit = async () => {
   try {
     await upload(file.value)
     toast.success('Video uploaded! Processing started.')
+
+    await refreshNuxtData('videos')
+
     await navigateTo('/', { replace: true })
   } catch {
     toast.error('Upload failed', { description: error.value?.message })

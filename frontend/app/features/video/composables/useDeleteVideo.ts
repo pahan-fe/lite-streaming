@@ -10,7 +10,6 @@ export const useDeleteVideo = () => {
 
     try {
       await deleteVideo(id)
-      await refreshNuxtData('videos')
     } catch (err) {
       error.value = err instanceof Error ? err : new Error('Unknown error')
       throw err

@@ -22,6 +22,7 @@ type Props = {
 }
 
 const props = defineProps<Props>()
+const emit = defineEmits<{ remove: [id: string] }>()
 
 const { deleteById, isPending, error } = useDeleteVideo()
 
@@ -29,6 +30,7 @@ const handleDelete = async () => {
   try {
     await deleteById(props.videoId)
     toast.success('Video deleted')
+    emit('remove', props.videoId)
 
     if (props.redirectTo) {
       await navigateTo(props.redirectTo, { replace: true })

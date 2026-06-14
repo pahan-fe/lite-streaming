@@ -11,9 +11,9 @@ type Props = {
 }
 
 const props = defineProps<Props>()
+const emit = defineEmits<{ remove: [id: string] }>()
 
 const createdAt = computed(() => formatDate(props.video.createdAt))
-
 const isReady = computed(() => props.video.status === 'ready')
 </script>
 
@@ -65,7 +65,7 @@ const isReady = computed(() => props.video.status === 'ready')
       </div>
 
       <span class="relative z-10 shrink-0">
-        <DeleteVideoButton :video-id="video.id" />
+        <DeleteVideoButton :video-id="video.id" @remove="emit('remove', video.id)" />
       </span>
     </div>
   </article>

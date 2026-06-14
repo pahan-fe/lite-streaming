@@ -4,7 +4,17 @@ import { useVideoList } from '~/features/video/composables/useVideoList'
 import VideoList from '../features/video/components/VideoList.vue'
 import VideoListSkeleton from '../features/video/components/VideoListSkeleton.vue'
 
-const { data: videoList, status, error } = useVideoList()
+const {
+  items: videoList,
+  hasMore,
+  status,
+  error,
+  isLoadingMore,
+  loadMore,
+  loadMoreError,
+  retryLoadMore,
+  remove,
+} = useVideoList()
 
 useSeoMeta({
   title: 'Library',
@@ -22,12 +32,6 @@ useSeoMeta({
           Your uploaded videos, transcoded and ready to stream.
         </p>
       </div>
-      <span
-        v-if="status !== 'pending'"
-        class="font-display text-4xl leading-none text-muted-foreground/30 tabular-nums"
-      >
-        {{ String(videoList.length).padStart(2, '0') }}
-      </span>
     </header>
 
     <VideoListSkeleton v-if="status === 'pending'" />
@@ -37,6 +41,15 @@ useSeoMeta({
     >
       {{ error?.message }}
     </div>
-    <VideoList v-else :video-list="videoList" />
+    <VideoList
+      v-else
+      :video-list="videoList"
+      :has-more="hasMore"
+      :is-loading-more="isLoadingMore"
+      :load-more-error="loadMoreError"
+      @load-more="loadMore"
+      @retry-load-more="retryLoadMore"
+      @remove="remove"
+    />
   </div>
 </template>

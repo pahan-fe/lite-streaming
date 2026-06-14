@@ -1,11 +1,23 @@
-import { VideoListSchema, VideoSchema } from '../schemas/video.schema'
+import { VideoListResponseSchema, VideoSchema } from '../schemas/video.schema'
 
-export const fetchVideoList = async () => {
+interface FetchVideoListQuery {
+  limit?: number
+  cursor?: string
+}
+export const fetchVideoList = async ({ limit, cursor }: FetchVideoListQuery = {}) => {
   const { $api } = useNuxtApp()
 
-  const raw = await $api('/api/videos')
+  const query: FetchVideoListQuery = {}
+  if (cursor) {
+    query.cursor = cursor
+  }
+  if (limit) {
+    query.limit = limit
+  }
 
-  return VideoListSchema.parse(raw)
+  const raw = await $api('/api/videos', { query })
+
+  return VideoListResponseSchema.parse(raw)
 }
 
 export const uploadVideo = (file: File) => {
