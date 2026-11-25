@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/minio/minio-go/v7"
@@ -23,18 +24,19 @@ func (s *S3Storage) Upload(ctx context.Context, key string, reader io.Reader, co
 	return nil
 }
 
-func (s *S3Storage) Get(ctx context.Context, key string) ([]byte, error) {
+func (s *S3Storage) Get(ctx context.Context, key string) (io.ReadCloser, error) {
 	obj, objErr := s.client.GetObject(ctx, s.bucket, key, minio.GetObjectOptions{})
 	if objErr != nil {
 		return nil, objErr
 	}
 
-	data, convertErr := io.ReadAll(obj)
-	if convertErr != nil {
-		return nil, convertErr
+	_, infoErr := obj.Stat()
+	if infoErr != nil {
+		obj.Close()
+		return nil, fmt.Errorf("Object not found: %v", infoErr)
 	}
 
-	return data, nil
+	return obj, nil
 }
 
 func (s *S3Storage) Delete(ctx context.Context, key string) error {

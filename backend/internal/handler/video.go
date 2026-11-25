@@ -2,6 +2,8 @@ package handler
 
 import (
 	"encoding/json"
+	"io"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -93,14 +95,18 @@ func (h *VideoHandler) HandleStream(w http.ResponseWriter, r *http.Request) {
 
 	id := r.PathValue("id")
 
-	data, contentType, err := h.service.GetRawStream(ctx, id)
+	reader, contentType, err := h.service.GetRawStream(ctx, id)
 	if err != nil {
 		http.Error(w, "Error fetching video stream", http.StatusInternalServerError)
 		return
 	}
+	defer reader.Close()
 
 	w.Header().Set("Content-Type", contentType)
-	w.Write(data)
+	_, writingErr := io.Copy(w, reader)
+	if writingErr != nil {
+		slog.ErrorContext(ctx, "Failed writing to response", "err", writingErr)
+	}
 }
 
 func (h *VideoHandler) HandleHLSFile(w http.ResponseWriter, r *http.Request) {
@@ -109,14 +115,18 @@ func (h *VideoHandler) HandleHLSFile(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	filename := r.PathValue("filename")
 
-	data, contentType, err := h.service.GetHLSFile(ctx, id, filename)
+	reader, contentType, err := h.service.GetHLSFile(ctx, id, filename)
 	if err != nil {
 		http.Error(w, "Error fetching HLS file", http.StatusInternalServerError)
 		return
 	}
+	defer reader.Close()
 
 	w.Header().Set("Content-Type", contentType)
-	w.Write(data)
+	_, copyErr := io.Copy(w, reader)
+	if copyErr != nil {
+		slog.ErrorContext(ctx, "Failed splitting file", "err", copyErr)
+	}
 }
 
 func NewVideoHandler(service *service.VideoService) *VideoHandler {

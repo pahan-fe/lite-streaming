@@ -50,7 +50,7 @@ func (m *mockPublisher) Publish(ctx context.Context, queueName string, body []by
 	return m.publishErr
 }
 
-func (m *mockStorage) Get(ctx context.Context, key string) ([]byte, error) {
+func (m *mockStorage) Get(ctx context.Context, key string) (io.ReadCloser, error) {
 	return nil, nil
 }
 func (m *mockStorage) Upload(ctx context.Context, key string, data io.Reader, contentType string, fileSize int64) error {

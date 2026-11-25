@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"strings"
@@ -60,19 +61,33 @@ func processMessage(ctx context.Context, body []byte, repo *repository.VideoRepo
 		return fmt.Errorf("Failed to get video by ID: %v", videoErr)
 	}
 
-	originVideo, originVideoErr := str.Get(ctx, video.S3RawKey)
+	reader, originVideoErr := str.Get(ctx, video.S3RawKey)
 	if originVideoErr != nil {
 		return fmt.Errorf("Failed to get origin video: %v", originVideoErr)
 	}
+	defer reader.Close()
 
 	repo.UpdateStatus(ctx, video.ID, "processing")
 
-	var file = tmpDir + "/input.mp4"
+	var inputPath = tmpDir + "/input.mp4"
 
-	os.WriteFile(file, originVideo, 0644)
+	inputFile, inputFileErr := os.Create(inputPath)
+	if inputFileErr != nil {
+		return fmt.Errorf("Failed temp file creation: %v", inputFileErr)
+	}
+
+	_, copyErr := io.Copy(inputFile, reader)
+	if copyErr != nil {
+		inputFile.Close()
+		return fmt.Errorf("Failed writing to temp file: %v", copyErr)
+	}
+
+	if closeErr := inputFile.Close(); closeErr != nil {
+		return fmt.Errorf("Failed closing file: %v", closeErr)
+	}
 
 	var hlsDir = tmpDir + "/hls"
-	transcodeErr := tc.TranscodeToHLS(ctx, file, hlsDir)
+	transcodeErr := tc.TranscodeToHLS(ctx, inputPath, hlsDir)
 	if transcodeErr != nil {
 		return fmt.Errorf("Failed to transcode video: %v", transcodeErr)
 	}

@@ -26,7 +26,7 @@ type Publisher interface {
 
 type Storage interface {
 	Upload(ctx context.Context, key string, reader io.Reader, contentType string, size int64) error
-	Get(ctx context.Context, key string) ([]byte, error)
+	Get(ctx context.Context, key string) (io.ReadCloser, error)
 	Delete(ctx context.Context, key string) error
 }
 
@@ -155,28 +155,28 @@ func (s *VideoService) List(ctx context.Context, cursor string, limit int) (mode
 	return model.VideoListResponse{Items: videos, NextCursor: nextCursor}, nil
 }
 
-func (s *VideoService) GetRawStream(ctx context.Context, id string) ([]byte, string, error) {
+func (s *VideoService) GetRawStream(ctx context.Context, id string) (io.ReadCloser, string, error) {
 	video, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, "", err
 	}
 
-	data, storageErr := s.storage.Get(ctx, video.S3RawKey)
+	reader, storageErr := s.storage.Get(ctx, video.S3RawKey)
 	if storageErr != nil {
 		return nil, "", storageErr
 	}
 
-	return data, video.ContentType, nil
+	return reader, video.ContentType, nil
 }
 
-func (s *VideoService) GetHLSFile(ctx context.Context, id string, filename string) ([]byte, string, error) {
+func (s *VideoService) GetHLSFile(ctx context.Context, id string, filename string) (io.ReadCloser, string, error) {
 	_, videoErr := s.repo.GetByID(ctx, id)
 	if videoErr != nil {
 		return nil, "", videoErr
 	}
 
 	key := "videos/" + id + "/hls/" + filename
-	data, storageErr := s.storage.Get(ctx, key)
+	reader, storageErr := s.storage.Get(ctx, key)
 
 	if storageErr != nil {
 		return nil, "", storageErr
@@ -189,7 +189,7 @@ func (s *VideoService) GetHLSFile(ctx context.Context, id string, filename strin
 		contentType = "video/mp2t"
 	}
 
-	return data, contentType, nil
+	return reader, contentType, nil
 }
 
 func NewVideoService(repo Repo, queue Publisher, storage Storage) *VideoService {
