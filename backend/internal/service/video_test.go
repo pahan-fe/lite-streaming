@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"errors"
+	"io"
+	"strings"
 	"testing"
 
 	"github.com/pahan-fe/lite-streaming/backend/internal/model"
@@ -51,7 +53,7 @@ func (m *mockPublisher) Publish(ctx context.Context, queueName string, body []by
 func (m *mockStorage) Get(ctx context.Context, key string) ([]byte, error) {
 	return nil, nil
 }
-func (m *mockStorage) Upload(ctx context.Context, key string, data []byte, contentType string) error {
+func (m *mockStorage) Upload(ctx context.Context, key string, data io.Reader, contentType string, fileSize int64) error {
 	return m.uploadErr
 }
 func (m *mockStorage) Delete(ctx context.Context, key string) error {
@@ -64,7 +66,7 @@ func TestVideoService_Upload_HappyPath(t *testing.T) {
 	storage := &mockStorage{}
 	svc := NewVideoService(repo, queue, storage)
 
-	id, err := svc.Upload(context.Background(), []byte("video data"), "video/mp4", "test.mp4")
+	id, err := svc.Upload(context.Background(), strings.NewReader("data"), "video/mp4", "test.mp4", 4)
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -80,7 +82,7 @@ func TestVideoService_Upload_StorageError(t *testing.T) {
 	storage := &mockStorage{uploadErr: errors.New("s3 down")}
 	svc := NewVideoService(repo, queue, storage)
 
-	_, err := svc.Upload(context.Background(), []byte("data"), "video/mp4", "test.mp4")
+	_, err := svc.Upload(context.Background(), strings.NewReader("data"), "video/mp4", "test.mp4", 4)
 
 	if err == nil {
 		t.Fatalf("expected error, got nil")
@@ -99,7 +101,7 @@ func TestVideoService_Upload_RepoError(t *testing.T) {
 	storage := &mockStorage{}
 	svc := NewVideoService(repo, queue, storage)
 
-	_, err := svc.Upload(context.Background(), []byte("data"), "video/mp4", "test.mp4")
+	_, err := svc.Upload(context.Background(), strings.NewReader("data"), "video/mp4", "test.mp4", 4)
 
 	if err == nil {
 		t.Fatalf("expected error, got nil")
@@ -115,7 +117,7 @@ func TestVideoService_Upload_QueueError(t *testing.T) {
 	storage := &mockStorage{}
 	svc := NewVideoService(repo, queue, storage)
 
-	_, err := svc.Upload(context.Background(), []byte("data"), "video/mp4", "test.mp4")
+	_, err := svc.Upload(context.Background(), strings.NewReader("data"), "video/mp4", "test.mp4", 4)
 
 	if err == nil {
 		t.Fatalf("expected error, got nil")

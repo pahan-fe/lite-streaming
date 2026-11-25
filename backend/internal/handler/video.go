@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 	"strconv"
 
@@ -16,7 +15,7 @@ type VideoHandler struct {
 func (h *VideoHandler) HandleUpload(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	err := r.ParseMultipartForm(1 << 30)
+	err := r.ParseMultipartForm(32 << 20)
 	if err != nil {
 		http.Error(w, "Error parsing form data", http.StatusBadRequest)
 		return
@@ -29,13 +28,7 @@ func (h *VideoHandler) HandleUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	data, readErr := io.ReadAll(file)
-	if readErr != nil {
-		http.Error(w, "Error reading file", http.StatusInternalServerError)
-		return
-	}
-
-	id, uploadErr := h.service.Upload(ctx, data, header.Header.Get("Content-Type"), header.Filename)
+	id, uploadErr := h.service.Upload(ctx, file, header.Header.Get("Content-Type"), header.Filename, header.Size)
 	if uploadErr != nil {
 		http.Error(w, "Error uploading video", http.StatusInternalServerError)
 		return

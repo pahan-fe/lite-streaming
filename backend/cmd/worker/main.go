@@ -87,7 +87,7 @@ func processMessage(ctx context.Context, body []byte, repo *repository.VideoRepo
 	for _, segment := range segments {
 		segmentPath := hlsDir + "/" + segment.Name()
 
-		fileContent, readErr := os.ReadFile(segmentPath)
+		segmentFile, readErr := os.Open(segmentPath)
 		if readErr != nil {
 			return fmt.Errorf("Failed to read segment: %v", readErr)
 		}
@@ -99,7 +99,14 @@ func processMessage(ctx context.Context, body []byte, repo *repository.VideoRepo
 			ext = "video/mp2t"
 		}
 
-		uploadErr := str.Upload(ctx, hlsKey+"/"+segment.Name(), fileContent, ext)
+		fileInfo, fileInfoErr := segmentFile.Stat()
+		if fileInfoErr != nil {
+			segmentFile.Close()
+			return fmt.Errorf("Failed to get fileInfo: %v", fileInfoErr)
+		}
+
+		uploadErr := str.Upload(ctx, hlsKey+"/"+segment.Name(), segmentFile, ext, fileInfo.Size())
+		segmentFile.Close()
 		if uploadErr != nil {
 			return fmt.Errorf("Failed to upload segment: %v", uploadErr)
 		}

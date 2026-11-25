@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"bytes"
 	"context"
 	"io"
 
@@ -15,10 +14,8 @@ type S3Storage struct {
 	bucket string
 }
 
-func (s *S3Storage) Upload(ctx context.Context, key string, data []byte, contentType string) error {
-	reader := bytes.NewReader(data)
-
-	_, err := s.client.PutObject(ctx, s.bucket, key, reader, int64(len(data)), minio.PutObjectOptions{ContentType: contentType})
+func (s *S3Storage) Upload(ctx context.Context, key string, reader io.Reader, contentType string, fileSize int64) error {
+	_, err := s.client.PutObject(ctx, s.bucket, key, reader, fileSize, minio.PutObjectOptions{ContentType: contentType})
 	if err != nil {
 		return err
 	}

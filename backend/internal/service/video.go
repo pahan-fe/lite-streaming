@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"io"
 	"strings"
 	"time"
 
@@ -24,7 +25,7 @@ type Publisher interface {
 }
 
 type Storage interface {
-	Upload(ctx context.Context, key string, data []byte, contentType string) error
+	Upload(ctx context.Context, key string, reader io.Reader, contentType string, size int64) error
 	Get(ctx context.Context, key string) ([]byte, error)
 	Delete(ctx context.Context, key string) error
 }
@@ -63,10 +64,10 @@ func decodeCursor(s string) (*model.Cursor, error) {
 	return &model.Cursor{ID: parts[1], CreatedAt: createdAt}, nil
 }
 
-func (s *VideoService) Upload(ctx context.Context, videoData []byte, contentType string, filename string) (string, error) {
+func (s *VideoService) Upload(ctx context.Context, reader io.Reader, contentType string, filename string, fileSize int64) (string, error) {
 	id := uuid.New().String()
 
-	storageErr := s.storage.Upload(ctx, "videos/"+id+"/original/"+filename, videoData, contentType)
+	storageErr := s.storage.Upload(ctx, "videos/"+id+"/original/"+filename, reader, contentType, fileSize)
 	if storageErr != nil {
 		return id, storageErr
 	}
@@ -75,7 +76,7 @@ func (s *VideoService) Upload(ctx context.Context, videoData []byte, contentType
 		ID:               id,
 		OriginalFilename: filename,
 		ContentType:      contentType,
-		Size:             int64(len(videoData)),
+		Size:             fileSize,
 		Status:           "uploaded",
 		S3RawKey:         "videos/" + id + "/original/" + filename,
 		S3HLSKey:         "",
