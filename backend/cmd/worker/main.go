@@ -72,7 +72,7 @@ func processMessage(ctx context.Context, body []byte, repo *repository.VideoRepo
 	os.WriteFile(file, originVideo, 0644)
 
 	var hlsDir = tmpDir + "/hls"
-	transcodeErr := tc.TranscodeToHLS(file, hlsDir)
+	transcodeErr := tc.TranscodeToHLS(ctx, file, hlsDir)
 	if transcodeErr != nil {
 		return fmt.Errorf("Failed to transcode video: %v", transcodeErr)
 	}
